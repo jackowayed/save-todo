@@ -2,12 +2,14 @@
 
 import json
 import os
+import subprocess
 import sys
 from urllib.request import Request, urlopen
 
 AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
 AIRTABLE_BASE = os.getenv("AIRTABLE_BASE")
 AIRTABLE_TABLE = os.getenv("AIRTABLE_TABLE", "Todos")
+INCLUDE_LINK = os.getenv("INCLUDE_CHROME_LINK")
 
 
 def create_request(data):
@@ -23,8 +25,30 @@ def request_repr(request):
             + repr(request.header_items()))
 
 
-def add_todo(name, link=None):
-    post_data = json.dumps({"fields": {"Name": name}}).encode()
+def get_chrome_tab():
+    CHROME_APPLESCRIPT = """
+    tell application "Google Chrome" to return URL of active tab of front window
+    """
+    res = subprocess.run("osascript", text=True,
+                         input=CHROME_APPLESCRIPT, capture_output=True)
+    if res.returncode != 0:
+        print(res.stderr)
+    else:
+        return res.stdout.strip()
+
+
+def build_data(name):
+    fields = {"Name": name}
+    link = None
+    if INCLUDE_LINK:
+        link = get_chrome_tab()
+    if link:
+        fields["Link"] = link
+    return json.dumps({"fields": fields}).encode()
+
+
+def add_todo(name):
+    post_data = build_data(name)
     request = create_request(post_data)
     print(request_repr(request))
     print(post_data)
