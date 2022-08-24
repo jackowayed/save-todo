@@ -6,10 +6,26 @@ import subprocess
 import sys
 from urllib.request import Request, urlopen
 
+
+def parse_bool(b):
+    """
+    Takes a boolean env var arg and makes it a boolean
+
+    False:
+    * not present
+    * empty string
+    * the word false (any case)
+    * 0
+    """
+    if not b:
+        return False
+    return not (b == "0" or b.lower() == "false")
+
+
 AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
 AIRTABLE_BASE = os.getenv("AIRTABLE_BASE")
 AIRTABLE_TABLE = os.getenv("AIRTABLE_TABLE", "Todos")
-INCLUDE_LINK = os.getenv("INCLUDE_CHROME_LINK")
+INCLUDE_LINK = parse_bool(os.getenv("INCLUDE_CHROME_LINK"))
 
 
 def create_request(data):
