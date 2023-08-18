@@ -1,4 +1,4 @@
 #!/bin/sh
-export source_dir=$(dirname "$0")
+export source_dir=$(dirname "$(readlink -f "$0")")
 source $source_dir/.env
 python3 $source_dir/post-todo.py "$@"
