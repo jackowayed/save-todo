@@ -41,9 +41,9 @@ def request_repr(request):
             + repr(request.header_items()))
 
 
-def get_chrome_tab():
-    CHROME_APPLESCRIPT = """
-    tell application "Google Chrome" to return URL of active tab of front window
+def get_chrome_tab(attr="URL"):
+    CHROME_APPLESCRIPT = f"""
+    tell application "Google Chrome" to return {attr} of active tab of front window
     """
     res = subprocess.run("osascript", text=True,
                          input=CHROME_APPLESCRIPT, capture_output=True)
@@ -57,7 +57,9 @@ def build_data(name):
     fields = {"Name": name}
     link = None
     if INCLUDE_LINK:
-        link = get_chrome_tab()
+        link = get_chrome_tab("URL")
+        if not name:
+            fields["Name"] = get_chrome_tab("title")
     if link:
         fields["Link"] = link
     return json.dumps({"fields": fields}).encode()
@@ -66,7 +68,7 @@ def build_data(name):
 def add_todo(name):
     post_data = build_data(name)
     request = create_request(post_data)
-    print(request_repr(request))
+    #print(request_repr(request))
     print(post_data)
     with urlopen(request) as response:
         print(response)
